@@ -1,0 +1,5 @@
+CREATE OR REPLACE PACKAGE personal_code AS
+
+
+END;
+/
