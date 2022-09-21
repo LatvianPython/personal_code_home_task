@@ -16,8 +16,9 @@ CREATE OR REPLACE PACKAGE BODY test_personal_code AS
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('181192149', FALSE, 'too few digits');
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('501192-14950', FALSE, 'wrong date');
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('181492-14950', FALSE, 'wrong date');
-    vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('181192-64950', FALSE, 'wrong date');
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('181192-14951', FALSE, 'wrong checksum');
+    vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('181192-64958', TRUE, '1. not a valid date, incorrect century, check only checksum');
+    vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('181192-44957', TRUE, '2. not a valid date, incorrect century, check only checksum');
     --tests from "valsts informācijas sistēmu savietotājs" (VISS) recommendations
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('123123-12345', FALSE, 'VISS.1');
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('320000-00001', TRUE, 'VISS.2');
@@ -27,7 +28,6 @@ CREATE OR REPLACE PACKAGE BODY test_personal_code AS
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('420000-00001', FALSE, 'VISS.6');
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('520000-00001', FALSE, 'VISS.7');
     vt_expectations(vt_expectations.COUNT + 1) := vr_expectation('350000-00001', TRUE, 'VISS.8');
-
 
     FOR v_i IN 1 .. vt_expectations.COUNT LOOP
       ut.expect(
