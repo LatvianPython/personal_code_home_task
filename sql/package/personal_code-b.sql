@@ -61,7 +61,7 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
     v_birth_date DATE;
     v_checksum INTEGER := 0;
     v_gender_and_century INTEGER;
-  BEGIN
+  BEGIN--fixme: wikipedia says at the same time that 1-8, and 1-6 are valid
     IF regexp_like(p_personal_code, '^[1-8]\d{10}$') THEN
       v_gender_and_century := TO_NUMBER(SUBSTR(p_personal_code, 1, 1));
       BEGIN--todo: should be refactored, duplicated a bit with latvian checker
@@ -89,6 +89,50 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
     RETURN vr_result;
   END parse_ee_code;
 
+  FUNCTION parse_lt_code(p_personal_code IN VARCHAR2)
+  RETURN tr_personal_code IS--todo: very similar to estonial algo, should refactor
+    vr_result tr_personal_code;
+    v_birth_date DATE;
+    v_checksum INTEGER := 0;
+    v_gender_and_century INTEGER;
+  BEGIN--todo: same type of regex as estonia, info on lithuania specifies 1-6
+    IF regexp_like(p_personal_code, '^[1-6]\d{10}$') THEN
+      v_gender_and_century := TO_NUMBER(SUBSTR(p_personal_code, 1, 1));
+      BEGIN--todo: should be refactored, duplicated a bit with latvian/estonian checker
+        v_birth_date := TO_DATE(SUBSTR(p_personal_code, 4, 2) ||
+                                SUBSTR(p_personal_code, 6, 2)  ||
+                                (TO_NUMBER(SUBSTR(p_personal_code, 2, 2)) + 1800 + 100 * (v_gender_and_century / 2)),
+                                'ddmmyyyy');
+      EXCEPTION
+        WHEN e_incorrect_day OR e_incorrect_month THEN
+          vr_result.is_valid := FALSE;
+          RETURN vr_result;
+      END;
+
+      --todo: same magic array as estonia
+      FOR v_i IN 1 .. 10 LOOP
+        v_checksum := v_checksum + (TO_NUMBER(SUBSTR('1234567891', v_i, 1)) * TO_NUMBER(SUBSTR(p_personal_code, v_i, 1)));
+      END LOOP;
+      v_checksum := MOD(v_checksum, 11);
+
+      --todo: two magic arrays for lithuania, should refactor, checksum algo very identical between countries
+      IF v_checksum != 10 THEN
+        vr_result.is_valid := v_checksum = SUBSTR(p_personal_code, -1, 1);
+      ELSE
+        v_checksum := 0;
+        FOR v_i IN 1 .. 10 LOOP
+          v_checksum := v_checksum + (TO_NUMBER(SUBSTR('3456789123', v_i, 1)) * TO_NUMBER(SUBSTR(p_personal_code, v_i, 1)));
+        END LOOP;
+        v_checksum := MOD(v_checksum, 11);
+        vr_result.is_valid := v_checksum = SUBSTR(p_personal_code, -1, 1);
+      END IF;
+    ELSE
+      vr_result.is_valid := FALSE;
+    END IF;
+
+    RETURN vr_result;
+  END parse_lt_code;
+
   FUNCTION parse_personal_code(p_personal_code IN VARCHAR2,
                                p_country       IN VARCHAR2)
   RETURN tr_personal_code IS
@@ -98,6 +142,8 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
     WHEN 'LV' THEN
       vr_result := parse_lv_code(p_personal_code);
     WHEN 'EE' THEN
+      vr_result := parse_ee_code(p_personal_code);
+    WHEN 'LT' THEN
       vr_result := parse_ee_code(p_personal_code);
     ELSE
       vr_result.is_valid := FALSE;
