@@ -13,7 +13,7 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
     v_personal_code VARCHAR2(11);
     v_checksum INTEGER := 0;
   BEGIN
-    IF regexp_like(p_personal_code, '^32\d{9}$') THEN
+    IF regexp_like(p_personal_code, '^3[2-9]\d{4}-?\d{5}$') THEN
       vr_result.is_valid := TRUE; -- new personal code format
     ELSIF regexp_like(p_personal_code, '^[0-9]{6}-?[0-9]{5}$') THEN
       v_personal_code := regexp_replace(p_personal_code, '\D');
