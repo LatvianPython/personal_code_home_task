@@ -1,6 +1,6 @@
 CREATE OR REPLACE PACKAGE BODY test_personal_code AS
 
-  PROCEDURE personal_code_validity IS
+  PROCEDURE personal_code_validity_latvia IS
     TYPE vr_expectation IS RECORD (personal_code VARCHAR2(20), expectation BOOLEAN, message VARCHAR2(100));
     TYPE tt_expectations IS TABLE OF vr_expectation INDEX BY PLS_INTEGER;
     vt_expectations tt_expectations;
@@ -36,7 +36,17 @@ CREATE OR REPLACE PACKAGE BODY test_personal_code AS
       ).to_equal(vt_expectations(v_i).expectation);
     END LOOP;
 
-  END personal_code_validity;
+  END;
+
+  PROCEDURE personal_code_validity_estonia IS
+  BEGIN
+    ut.expect(personal_code.parse_personal_code('37605030299', 'EE').is_valid).to_equal(TRUE);
+  END;
+
+  PROCEDURE personal_code_validity_lithuania IS
+  BEGIN
+    raise_application_error(-20001, 'write tests');--todo
+  END;
 
 END;
 /
