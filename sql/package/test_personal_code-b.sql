@@ -45,8 +45,9 @@ CREATE OR REPLACE PACKAGE BODY test_personal_code AS
 
   PROCEDURE personal_code_validity_lithuania IS
   BEGIN
-    ut.expect(personal_code.parse_personal_code('47803111025', 'LT').is_valid).to_equal(TRUE);
-    ut.expect(personal_code.parse_personal_code('49003111045', 'LT').is_valid).to_equal(TRUE);
+    ut.expect(personal_code.parse_personal_code('37605030299', 'LT').is_valid).to_equal(TRUE);
+    ut.expect(personal_code.parse_personal_code('47803111023', 'LT').is_valid).to_equal(TRUE);
+    ut.expect(personal_code.parse_personal_code('49003111047', 'LT').is_valid).to_equal(TRUE);
   END;
 
 END;
