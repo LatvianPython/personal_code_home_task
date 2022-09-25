@@ -12,7 +12,7 @@ technical take-home assignment
 
 # tests
 
-All tests using during development are available in [sql/package/test_personal_code-h.sql](sql/package/test_personal_code-h.sql), and [sql/package/test_personal_code-b.sql](sql/package/test_personal_code-b.sql).
+All tests used during development are available in [sql/package/test_personal_code-h.sql](sql/package/test_personal_code-h.sql), and [sql/package/test_personal_code-b.sql](sql/package/test_personal_code-b.sql).
 Use installed utPLSQL testing framework to run the tests.
 
 # usage
