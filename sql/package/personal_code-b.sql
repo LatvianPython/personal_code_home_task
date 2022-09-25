@@ -21,29 +21,32 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
     RETURN v_checksum;
   END calculate_checksum;
 
-  FUNCTION parse_birth_date(p_personal_code IN VARCHAR2,
+  FUNCTION parse_birth_date(pr_personal_code IN tr_personal_code,
                             p_day_offset IN INTEGER,
                             p_month_offset IN INTEGER,
                             p_year_offset IN INTEGER,
                             p_century_offset IN INTEGER,
                             p_with_gender IN BOOLEAN DEFAULT TRUE,
                             p_ignore_century_error IN BOOLEAN DEFAULT FALSE)
-  RETURN DATE IS
-    v_result DATE;
+  RETURN tr_personal_code IS
+    vr_result tr_personal_code := pr_personal_code;
     v_century INTEGER;
   BEGIN
-    v_century := TO_NUMBER(SUBSTR(p_personal_code, p_century_offset, 1));
-    v_century := CASE WHEN p_with_gender THEN v_century / 2 ELSE v_century END;
+    v_century := TO_NUMBER(SUBSTR(pr_personal_code.personal_code, p_century_offset, 1));
+    IF p_with_gender THEN
+      vr_result.gender := CASE MOD(v_century, 2) WHEN 0 THEN 'F' ELSE 'M' END;
+      v_century := (v_century / 2) - 1;
+    END IF;
     IF p_ignore_century_error AND v_century NOT IN (1, 2, 3) THEN
       NULL;
     ELSE
-      v_result := TO_DATE(SUBSTR(p_personal_code, p_day_offset, 2) ||
-                          SUBSTR(p_personal_code, p_month_offset, 2)  ||
-                          (TO_NUMBER(SUBSTR(p_personal_code, p_year_offset, 2)) +
-                           1800 + 100 * v_century),
-                          'ddmmyyyy');
+      vr_result.birth_date := TO_DATE(SUBSTR(pr_personal_code.personal_code, p_day_offset, 2) ||
+                                      SUBSTR(pr_personal_code.personal_code, p_month_offset, 2)  ||
+                                      (TO_NUMBER(SUBSTR(pr_personal_code.personal_code, p_year_offset, 2)) +
+                                       1800 + 100 * v_century),
+                                      'ddmmyyyy');
     END IF;
-    RETURN v_result;
+    RETURN vr_result;
   EXCEPTION
     WHEN e_incorrect_day OR e_incorrect_month THEN
       RAISE e_invalid_birth_date;
@@ -52,17 +55,16 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
   FUNCTION parse_lv_code(p_personal_code IN VARCHAR2)
   RETURN tr_personal_code IS
     vr_result tr_personal_code;
-    v_birth_date DATE;
-    v_personal_code VARCHAR2(11);
     v_checksum INTEGER;
   BEGIN
     IF regexp_like(p_personal_code, '^3[2-9]\d{4}-?\d{5}$') THEN
+      vr_result.personal_code := regexp_replace(p_personal_code, '\D');
       vr_result.is_valid := TRUE; -- new personal code format
     ELSIF regexp_like(p_personal_code, '^[0-9]{6}-?[0-9]{5}$') THEN
-      v_personal_code := regexp_replace(p_personal_code, '\D');
+      vr_result.personal_code := regexp_replace(p_personal_code, '\D');
 
-      v_birth_date := parse_birth_date(
-        p_personal_code => v_personal_code,
+      vr_result := parse_birth_date(
+        pr_personal_code => vr_result,
         p_day_offset => 1,
         p_month_offset => 3,
         p_year_offset => 5,
@@ -71,9 +73,9 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
         p_ignore_century_error => TRUE
       );
 
-      v_checksum := MOD(MOD(calculate_checksum(v_personal_code, tt_checksum_magic(10, 5, 8, 4, 2, 1, 6, 3, 7, 9)) + 1, 11), 10);
+      v_checksum := MOD(MOD(calculate_checksum(vr_result.personal_code, tt_checksum_magic(10, 5, 8, 4, 2, 1, 6, 3, 7, 9)) + 1, 11), 10);
 
-      vr_result.is_valid := v_checksum = SUBSTR(v_personal_code, -1, 1);
+      vr_result.is_valid := v_checksum = SUBSTR(vr_result.personal_code, -1, 1);
     ELSE
       vr_result.is_valid := FALSE;
     END IF;
@@ -84,21 +86,21 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
   FUNCTION parse_ee_code(p_personal_code IN VARCHAR2)
   RETURN tr_personal_code IS
     vr_result tr_personal_code;
-    v_birth_date DATE;
     v_checksum INTEGER;
   BEGIN
     IF regexp_like(p_personal_code, '^[1-6]\d{10}$') THEN
-      v_birth_date := parse_birth_date(
-        p_personal_code => p_personal_code,
+      vr_result.personal_code := p_personal_code;
+      vr_result := parse_birth_date(
+        pr_personal_code => vr_result,
         p_day_offset => 4,
         p_month_offset => 6,
         p_year_offset => 2,
         p_century_offset => 1
       );
 
-      v_checksum := MOD(MOD(calculate_checksum(p_personal_code, tt_checksum_magic(1, 2, 3, 4, 5, 6, 7, 8, 9 ,1)), 11), 10);
+      v_checksum := MOD(MOD(calculate_checksum(vr_result.personal_code, tt_checksum_magic(1, 2, 3, 4, 5, 6, 7, 8, 9 ,1)), 11), 10);
 
-      vr_result.is_valid := v_checksum = SUBSTR(p_personal_code, -1, 1);
+      vr_result.is_valid := v_checksum = SUBSTR(vr_result.personal_code, -1, 1);
     ELSE
       vr_result.is_valid := FALSE;
     END IF;
@@ -109,25 +111,25 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
   FUNCTION parse_lt_code(p_personal_code IN VARCHAR2)
   RETURN tr_personal_code IS
     vr_result tr_personal_code;
-    v_birth_date DATE;
     v_checksum INTEGER;
   BEGIN
     IF regexp_like(p_personal_code, '^[1-6]\d{10}$') THEN
-      v_birth_date := parse_birth_date(
-        p_personal_code => p_personal_code,
+      vr_result.personal_code := p_personal_code;
+      vr_result := parse_birth_date(
+        pr_personal_code => vr_result,
         p_day_offset => 4,
         p_month_offset => 6,
         p_year_offset => 2,
         p_century_offset => 1
       );
 
-      v_checksum := MOD(calculate_checksum(p_personal_code, tt_checksum_magic(1, 2, 3, 4, 5, 6, 7, 8, 9 ,1)), 11);
+      v_checksum := MOD(calculate_checksum(vr_result.personal_code, tt_checksum_magic(1, 2, 3, 4, 5, 6, 7, 8, 9 ,1)), 11);
 
       IF v_checksum != 10 THEN
-        vr_result.is_valid := v_checksum = SUBSTR(p_personal_code, -1, 1);
+        vr_result.is_valid := v_checksum = SUBSTR(vr_result.personal_code, -1, 1);
       ELSE
-        v_checksum := MOD(calculate_checksum(p_personal_code, tt_checksum_magic(3, 4, 5, 6, 7, 8, 9, 1, 2, 3)), 11);
-        vr_result.is_valid := v_checksum = SUBSTR(p_personal_code, -1, 1);
+        v_checksum := MOD(calculate_checksum(vr_result.personal_code, tt_checksum_magic(3, 4, 5, 6, 7, 8, 9, 1, 2, 3)), 11);
+        vr_result.is_valid := v_checksum = SUBSTR(vr_result.personal_code, -1, 1);
       END IF;
     ELSE
       vr_result.is_valid := FALSE;
