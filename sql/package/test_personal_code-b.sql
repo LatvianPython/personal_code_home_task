@@ -57,6 +57,7 @@ CREATE OR REPLACE PACKAGE BODY test_personal_code AS
     ut.expect(personal_code.parse_personal_code('48002102760', 'EE').gender).to_equal('F');
     ut.expect(personal_code.parse_personal_code('37605030299', 'LT').gender).to_equal('M');
     ut.expect(personal_code.parse_personal_code('48002102760', 'LT').gender).to_equal('F');
+    ut.expect(personal_code.parse_personal_code('38002102761', 'EE').gender).to_equal('');
   END;
 
   PROCEDURE personal_code_date_parsing IS
@@ -65,6 +66,7 @@ CREATE OR REPLACE PACKAGE BODY test_personal_code AS
     ut.expect(personal_code.parse_personal_code('38002102760', 'EE').birth_date).to_equal(TO_DATE('02101980', 'ddmmyyyy'));
     ut.expect(personal_code.parse_personal_code('181192-14950', 'LV').birth_date).to_equal(TO_DATE('18111992', 'ddmmyyyy'));
     ut.expect(personal_code.parse_personal_code('181192-64958', 'LV').birth_date).to_equal(TO_DATE(''));
+    ut.expect(personal_code.parse_personal_code('38002102761', 'EE').birth_date).to_equal(TO_DATE(''));
   END;
 
 

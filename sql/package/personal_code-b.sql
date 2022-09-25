@@ -154,6 +154,13 @@ CREATE OR REPLACE PACKAGE BODY personal_code AS
       vr_result.is_valid := FALSE;
     END CASE;
 
+    IF vr_result.is_valid THEN
+      NULL;
+    ELSE
+      vr_result.personal_code := NULL;
+      vr_result.birth_date := NULL;
+      vr_result.gender := NULL;
+    END IF;
     RETURN vr_result;
   EXCEPTION
     WHEN e_invalid_birth_date THEN
