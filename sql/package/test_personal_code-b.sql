@@ -41,6 +41,7 @@ CREATE OR REPLACE PACKAGE BODY test_personal_code AS
   PROCEDURE personal_code_validity_estonia IS
   BEGIN
     ut.expect(personal_code.parse_personal_code('37605030299', 'EE').is_valid).to_equal(TRUE);
+    ut.expect(personal_code.parse_personal_code('38002102760', 'EE').is_valid).to_equal(TRUE);
   END;
 
   PROCEDURE personal_code_validity_lithuania IS
